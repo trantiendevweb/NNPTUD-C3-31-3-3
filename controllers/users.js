@@ -42,15 +42,38 @@ module.exports = {
             isDeleted: false
         })
         if (user) {
-            if (bcrypt.compareSync(password, user.password)) {
-                return jwt.sign({
-                    id: user.id
-                }, 'secret', {
-                    expiresIn: '1d'
-                })
-            } else {
+            if (user.lockTime && user.lockTime > Date.now()) {
                 return false;
+            } else {
+                if (bcrypt.compareSync(password, user.password)) {
+                    user.loginCount = 0;
+                    await user.save();    
+                    let token = jwt.sign({
+                        id: user.id
+                    }, 'secret', {
+                        expiresIn: '1d'
+                    })
+                    return token;
+                } else {
+                    //sai pass
+                    user.loginCount++;
+                    if (user.loginCount == 3) {
+                        user.loginCount = 0;
+                        user.lockTime = Date.now() + 3_600_000;
+                    }
+                    await user.save();
+                    return false;
+                }
             }
+        } else {
+            return false;
+        }
+    },
+    ChangePassword: async function (user, oldPassword, newPassword) {
+        if (bcrypt.compareSync(oldPassword, user.password)) {
+            user.password = newPassword;
+            await user.save();
+            return true;
         } else {
             return false;
         }

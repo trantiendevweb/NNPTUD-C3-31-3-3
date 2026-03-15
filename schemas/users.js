@@ -49,15 +49,18 @@ const userSchema = new mongoose.Schema(
     isDeleted: {
       type: Boolean,
       default: false
-    }
+    },
+    lockTime: Date
   },
   {
     timestamps: true
   }
 );
 userSchema.pre('save', function () {
-  let salt = bcrypt.genSaltSync(10);
-  this.password = bcrypt.hashSync(this.password, salt)
+  if (this.isModified("password")) {
+    let salt = bcrypt.genSaltSync(10);
+    this.password = bcrypt.hashSync(this.password, salt)
+  }
 })
 userSchema.pre('findOneAndUpdate', function () {
   console.log(this);
