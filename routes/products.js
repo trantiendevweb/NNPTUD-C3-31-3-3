@@ -1,9 +1,12 @@
 var express = require('express');
 var router = express.Router();
+let fs = require('fs/promises')
 let productModel = require('../schemas/products');//dbContext
 let inventoryModel = require('../schemas/inventories')
 const { default: slugify } = require('slugify');
 let mongoose = require('mongoose')
+let productController = require('../controllers/products')
+let { uploadExcel } = require('../utils/uploadHandler')
 
 /* GET users listing. */
 router.get('/', async function (req, res, next) {
@@ -29,6 +32,21 @@ router.get('/', async function (req, res, next) {
   //   }
   // )
   res.send(result);
+});
+
+router.post('/import', uploadExcel.single('file'), async function (req, res, next) {
+  if (!req.file) {
+    return res.status(400).send({ message: "file not found" });
+  }
+
+  try {
+    let result = await productController.ImportProductsFromExcel(req.file.path);
+    res.send(result);
+  } catch (err) {
+    res.status(400).send({ message: err.message });
+  } finally {
+    await fs.unlink(req.file.path).catch(function () { });
+  }
 });
 
 router.get('/:id', async function (req, res, next) {

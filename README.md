@@ -25,6 +25,20 @@ Business rules:
 - A default cart is created for each imported user
 - The password is emailed to the imported user through Mailtrap
 
+## Import Product From Excel
+
+- Endpoint: `POST /api/v1/products/import`
+- Content type: `multipart/form-data`
+- Field name: `file`
+- Required Excel columns: `sku`, `title`, `category`, `price`, `stock`
+
+Business rules:
+
+- Category is created automatically if it does not exist
+- Product is skipped when the title already exists
+- Inventory is created together with the product
+- `sku` is stored in the product description
+
 ## Sample Files
 
 Sample Excel files are in the `Ví dụ` folder.
